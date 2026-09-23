@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Monitoreo Policial - RADAR DICRIM & PN</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              850: '#151e2e',
+              900: '#0f172a',
+              950: '#090d16',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Estilos para scrollbars tácticos oscuros */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    .grid-tactical-bg {
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(51, 65, 85, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(51, 65, 85, 0.15) 1px, transparent 1px);
+    }
+    .radar-sweep {
+      animation: rotate 8s linear infinite;
+      transform-origin: center center;
+    }
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .pulse-tactical {
+      animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 0.2; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased overflow-x-hidden selection:bg-blue-600 selection:text-white">
+
+  <!-- TOP HEADER / BARRA SUPERIOR -->
+  <header class="w-full bg-slate-900 border-b border-slate-800/90 px-6 py-3.5 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md">
+    <!-- Identidad institucional y título -->
+    <div class="flex items-center space-x-4">
+      <!-- Escudo / Icono táctico vectorial -->
+      <div class="h-10 w-10 rounded bg-slate-800 border border-slate-700/80 flex items-center justify-center text-blue-500 shadow-inner">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M12 8v4"/>
+          <path d="M12 16h.01"/>
+        </svg>
+      </div>
+
+      <div>
+        <div class="flex items-center space-x-2.5">
+          <h1 class="text-base font-bold tracking-wider text-slate-50 uppercase font-mono">
+            Centro de Operaciones y Monitoreo Policial
+          </h1>
+          <span class="px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase rounded bg-blue-950 text-blue-400 border border-blue-800/60 font-mono">
+            C4I TÁCTICO
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 font-mono tracking-tight">
+          DIRECCIÓN CENTRAL DE INVESTIGACIÓN (DICRIM) • POLICÍA NACIONAL
+        </p>
+      </div>
+    </div>
+
+    <!-- Indicadores de sistema y reloj operativo -->
+    <div class="flex items-center space-x-6">
+      <div class="hidden md:flex items-center space-x-4 border-r border-slate-800 pr-6 text-xs font-mono">
+        <div class="flex items-center space-x-2">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span class="text-slate-300">RED SATELITAL: <span class="text-emerald-400 font-semibold">ACTIVA</span></span>
+        </div>
+        <div class="text-slate-500">|</div>
+        <div class="text-slate-400">
+          TERMINAL: <span class="text-slate-200">HQ-092-B</span>
+        </div>
+        <div class="text-slate-500">|</div>
+        <div class="text-slate-400">
+          CIFRADO: <span class="text-slate-200 font-semibold">AES-256</span>
+        </div>
+      </div>
+
+      <!-- Reloj militar y estado de turno -->
+      <div class="flex items-center space-x-3 text-right">
+        <div>
+          <div class="text-sm font-mono font-bold text-slate-200 tracking-wider" id="military-clock">
+            18:42:09 UTC-4
+          </div>
+          <div class="text-[11px] text-slate-400 font-mono">
+            17 ABR 2025 • TURNO NOCTURNO
+          </div>
+        </div>
+        <div class="h-8 w-8 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
+          <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL DEL DASHBOARD -->
+  <main class="flex-1 w-full p-4 lg:p-6 flex flex-col space-y-5 max-w-[1920px] mx-auto">
+
+    <!-- SECCIÓN DE MÉTRICAS (KPIS): 4 TARJETAS CON COLORES ESPECIFICADOS -->
+    <section class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- KPI 1: Total Arrestados (Azul) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-4 relative overflow-hidden shadow-sm hover:border-blue-500/40 transition-colors">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-blue-500"></div>
+        <div class="flex items-start justify-between">
+          <div>
+            <span class="text-xs uppercase tracking-wider font-semibold text-blue-400 font-mono">
+              Total Arrestados
+            </span>
+            <div class="mt-2 flex items-baseline space-x-2">
+              <span class="text-3xl font-bold font-mono tracking-tight text-white">
+                1,428
+              </span>
+              <span class="text-xs font-mono font-medium text-emerald-400 flex items-center">
+                ↑ +12.4%
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1 font-mono">
+              Últimas 24h: 38 operativos
+            </p>
+          </div>
+          <div class="p-2.5 rounded bg-blue-950/60 border border-blue-900/50 text-blue-400">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+          <span>Órdenes judiciales: 914</span>
+          <span class="text-blue-400 font-medium">En custodia: 100%</span>
+        </div>
+      </div>
+
+      <!-- KPI 2: Total Abatidos (Rojo) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-4 relative overflow-hidden shadow-sm hover:border-red-500/40 transition-colors">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-red-500"></div>
+        <div class="flex items-start justify-between">
+          <div>
+            <span class="text-xs uppercase tracking-wider font-semibold text-red-400 font-mono">
+              Total Abatidos
+            </span>
+            <div class="mt-2 flex items-baseline space-x-2">
+              <span class="text-3xl font-bold font-mono tracking-tight text-white">
+                17
+              </span>
+              <span class="text-xs font-mono font-medium text-slate-400 flex items-center">
+                Intervención armada
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1 font-mono">
+              Enfrentamiento en flagrante delito
+            </p>
+          </div>
+          <div class="p-2.5 rounded bg-red-950/60 border border-red-900/50 text-red-400">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="22" y1="12" x2="18" y2="12"/>
+              <line x1="6" y1="12" x2="2" y2="12"/>
+              <line x1="12" y1="6" x2="12" y2="2"/>
+              <line x1="12" y1="22" x2="12" y2="18"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+          <span>Armas incautadas: 23</span>
+          <span class="text-red-400 font-medium">Bajo investigación</span>
+        </div>
+      </div>
+
+      <!-- KPI 3: Total Entregados (Verde) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-4 relative overflow-hidden shadow-sm hover:border-emerald-500/40 transition-colors">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-emerald-500"></div>
+        <div class="flex items-start justify-between">
+          <div>
+            <span class="text-xs uppercase tracking-wider font-semibold text-emerald-400 font-mono">
+              Total Entregados
+            </span>
+            <div class="mt-2 flex items-baseline space-x-2">
+              <span class="text-3xl font-bold font-mono tracking-tight text-white">
+                342
+              </span>
+              <span class="text-xs font-mono font-medium text-emerald-400 flex items-center">
+                ↑ +5.1%
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1 font-mono">
+              Vía mediación / Defensoría
+            </p>
+          </div>
+          <div class="p-2.5 rounded bg-emerald-950/60 border border-emerald-900/50 text-emerald-400">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <polyline points="17 11 19 13 23 9"></polyline>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+          <span>Voluntarios: 289</span>
+          <span class="text-emerald-400 font-medium">Sin resistencia</span>
+        </div>
+      </div>
+
+      <!-- KPI 4: Incidentes Filtrados (Morado) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-4 relative overflow-hidden shadow-sm hover:border-purple-500/40 transition-colors">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-purple-500"></div>
+        <div class="flex items-start justify-between">
+          <div>
+            <span class="text-xs uppercase tracking-wider font-semibold text-purple-400 font-mono">
+              Incidentes Filtrados
+            </span>
+            <div class="mt-2 flex items-baseline space-x-2">
+              <span class="text-3xl font-bold font-mono tracking-tight text-white">
+                568
+              </span>
+              <span class="text-xs font-mono font-medium text-purple-400 flex items-center">
+                En tiempo real
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1 font-mono">
+              Criterios activos aplicados
+            </p>
+          </div>
+          <div class="p-2.5 rounded bg-purple-950/60 border border-purple-900/50 text-purple-400">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+          <span>De un total de: 2,890</span>
+          <span class="text-purple-400 font-medium">19.6% coincidencia</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- LAYOUT PRINCIPAL: 2 COLUMNAS (3/4 MAPA PLACEHOLDER + 1/4 RADAR DICRIM & PN) -->
+    <div class="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 items-stretch min-h-[640px]">
+      
+      <!-- COLUMNA IZQUIERDA (3/4): PLACEHOLDER OSCURO DEL MAPA CON BORDE TENUE -->
+      <div class="lg:col-span-3 bg-slate-900 border border-slate-800/80 rounded-xl relative flex flex-col overflow-hidden shadow-lg">
+        
+        <!-- Barra de herramientas superior del mapa táctico -->
+        <div class="h-12 border-b border-slate-800/80 bg-slate-900/90 px-4 flex items-center justify-between z-20">
+          <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-1.5 text-xs font-mono text-slate-300">
+              <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+              <span class="font-semibold uppercase tracking-wider">VISOR CARTOGRÁFICO GEOESPACIAL</span>
+            </div>
+            <span class="text-slate-600">|</span>
+            <span class="text-[11px] font-mono text-slate-400">COORD: 18°28'35"N 69°53'51"W • SANTO DOMINGO</span>
+          </div>
+
+          <!-- Controles de capa de mapa -->
+          <div class="flex items-center space-x-2">
+            <button class="px-2.5 py-1 text-xs font-mono rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-750 transition flex items-center space-x-1">
+              <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+              <span>Capas Tácticas</span>
+            </button>
+            <button class="px-2.5 py-1 text-xs font-mono rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-750 transition flex items-center space-x-1">
+              <svg class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <span>Zonas Calientes (Heatmap)</span>
+            </button>
+            <div class="flex items-center bg-slate-800 rounded border border-slate-700">
+              <button class="px-2 py-1 text-slate-300 hover:text-white text-xs font-mono border-r border-slate-700">+</button>
+              <button class="px-2 py-1 text-slate-300 hover:text-white text-xs font-mono">-</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Área visual del mapa (Placeholder oscuro con retícula táctica) -->
+        <div class="relative flex-1 bg-slate-950 grid-tactical-bg flex items-center justify-center overflow-hidden min-h-[500px]">
+          
+          <!-- Elementos vectoriales simulados de mapa nocturno / cartografía oscura -->
+          <svg class="absolute inset-0 w-full h-full opacity-20 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Curvas de nivel y trazado territorial esquemático -->
+            <path d="M 50 150 Q 200 80 400 200 T 800 180 T 1200 350" fill="none" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 4" />
+            <path d="M 0 350 Q 250 280 500 420 T 950 360 T 1400 490" fill="none" stroke="#334155" stroke-width="2" />
+            <path d="M 120 500 Q 380 390 700 560 T 1100 510" fill="none" stroke="#334155" stroke-width="1" />
+            <!-- Polígonos de cuadrantes tácticos -->
+            <polygon points="180,140 320,160 360,260 220,290" fill="rgba(37, 99, 235, 0.04)" stroke="rgba(59, 130, 246, 0.25)" stroke-width="1" />
+            <polygon points="460,210 650,230 620,380 430,340" fill="rgba(239, 68, 68, 0.04)" stroke="rgba(239, 68, 68, 0.25)" stroke-width="1" />
+            <polygon points="720,120 920,150 880,310 690,270" fill="rgba(168, 85, 247, 0.04)" stroke="rgba(168, 85, 247, 0.25)" stroke-width="1" />
+          </svg>
+
+          <!-- Puntos de incidentes tácticos sobre el mapa (Pins tácticos) -->
+          <div class="absolute top-[28%] left-[22%] flex flex-col items-center group cursor-pointer z-10">
+            <span class="relative flex h-4 w-4">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 border border-slate-900 shadow"></span>
+            </span>
+            <div class="mt-1 px-2 py-0.5 bg-slate-900/90 border border-red-500/50 rounded text-[10px] font-mono text-red-300 whitespace-nowrap shadow-lg">
+              INC-084: ENFRENTAMIENTO [CAPOTILLO]
+            </div>
+          </div>
+
+          <div class="absolute top-[45%] left-[48%] flex flex-col items-center group cursor-pointer z-10">
+            <span class="relative flex h-3.5 w-3.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-blue-600 border border-slate-900 shadow"></span>
+            </span>
+            <div class="mt-1 px-2 py-0.5 bg-slate-900/90 border border-blue-500/50 rounded text-[10px] font-mono text-blue-300 whitespace-nowrap shadow-lg">
+              OP-112: ARRESTO DE ALTO PERFIL [VILLA MELLA]
+            </div>
+          </div>
+
+          <div class="absolute top-[65%] left-[34%] flex flex-col items-center group cursor-pointer z-10">
+            <span class="relative flex h-3.5 w-3.5">
+              <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border border-slate-900 shadow"></span>
+            </span>
+            <div class="mt-1 px-2 py-0.5 bg-slate-900/90 border border-emerald-500/50 rounded text-[10px] font-mono text-emerald-300 whitespace-nowrap shadow-lg">
+              ENT-041: ENTREGA VOLUNTARIA [LOS ALCARRIZOS]
+            </div>
+          </div>
+
+          <div class="absolute top-[38%] left-[72%] flex flex-col items-center group cursor-pointer z-10">
+            <span class="relative flex h-3.5 w-3.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-purple-600 border border-slate-900 shadow"></span>
+            </span>
+            <div class="mt-1 px-2 py-0.5 bg-slate-900/90 border border-purple-500/50 rounded text-[10px] font-mono text-purple-300 whitespace-nowrap shadow-lg">
+              INT-209: PREDICCIÓN OPERATIVA [SANTIAGO SUR]
+            </div>
+          </div>
+
+          <!-- Radar focal central estilizado -->
+          <div class="relative w-80 h-80 rounded-full border border-slate-800/80 flex items-center justify-center pointer-events-none">
+            <div class="w-60 h-60 rounded-full border border-slate-800/60 flex items-center justify-center">
+              <div class="w-40 h-40 rounded-full border border-blue-900/30 flex items-center justify-center">
+                <div class="w-20 h-20 rounded-full border border-blue-800/20"></div>
+              </div>
+            </div>
+            <!-- Ejes de coordenadas -->
+            <div class="absolute w-full h-[1px] bg-slate-800/80"></div>
+            <div class="absolute h-full w-[1px] bg-slate-800/80"></div>
+            <!-- Barrido cónico del radar -->
+            <div class="absolute inset-0 rounded-full overflow-hidden radar-sweep opacity-30">
+              <div class="w-1/2 h-1/2 origin-bottom-right bg-gradient-to-tr from-transparent via-blue-500/10 to-blue-400/30"></div>
+            </div>
+          </div>
+
+          <!-- Texto descriptivo central del placeholder de integración -->
+          <div class="absolute bottom-5 left-5 bg-slate-900/90 backdrop-blur border border-slate-800 p-3 rounded-lg max-w-sm pointer-events-auto">
+            <div class="flex items-center space-x-2 text-xs font-mono font-semibold text-slate-200">
+              <svg class="w-4 h-4 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+              <span>INTEGRACIÓN GIS & CAPAS MAPBOX / LEAFLET</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1 font-mono leading-tight">
+              Placeholder habilitado para mapa satelital interactivo. Renderizando cuadrantes operativos, patrullaje GPS y radiogoniometría policial.
+            </p>
+          </div>
+
+          <!-- Leyenda cartográfica táctica flotante derecha -->
+          <div class="absolute bottom-5 right-5 bg-slate-900/90 backdrop-blur border border-slate-800 px-3 py-2.5 rounded-lg text-[11px] font-mono text-slate-300 space-y-1.5 shadow">
+            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">Leyenda Operativa</div>
+            <div class="flex items-center space-x-2">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              <span>Arresto / Detención</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="w-2 h-2 rounded-full bg-red-500"></span>
+              <span>Enfrentamiento / Abatido</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>Entrega Voluntaria</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+              <span>Incidente Filtrado</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Footer inferior del mapa -->
+        <div class="h-8 border-t border-slate-800/80 bg-slate-900 px-4 flex items-center justify-between text-[11px] font-mono text-slate-400">
+          <div>FUENTE: SISTEMA DE INFORMACIÓN GEOGRÁFICA POLICIAL (SIG-PN)</div>
+          <div>ACTUALIZACIÓN CADA: 15 SEG • MODO ALTA DISPONIBILIDAD</div>
+        </div>
+
+      </div>
+
+      <!-- COLUMNA DERECHA (1/4): BARRA LATERAL 'RADAR DICRIM & PN' -->
+      <aside class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-xl flex flex-col overflow-hidden shadow-lg">
+        
+        <!-- CABECERA DEL PANEL -->
+        <div class="p-4 border-b border-slate-800 bg-slate-850/80">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="h-2.5 w-2.5 rounded-full bg-blue-500"></span>
+              <h2 class="text-sm font-bold tracking-wider uppercase text-white font-mono">
+                RADAR DICRIM & PN
+              </h2>
+            </div>
+            <span class="text-[10px] font-mono text-blue-400 bg-blue-950 border border-blue-900 px-2 py-0.5 rounded font-medium">
+              FEED EN VIVO
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1 font-mono">
+            Filtrado táctico y despacho de novedades policiales
+          </p>
+
+          <!-- SECCIÓN DE BÚSQUEDA Y FILTROS -->
+          <div class="mt-3.5 space-y-2.5">
+            <!-- Caja de búsqueda -->
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
+              <input 
+                type="text" 
+                placeholder="Buscar por alias, código, sector..." 
+                class="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-950 border border-slate-800 rounded text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono transition"
+              >
+            </div>
+
+            <!-- 3 Filtros desplegables (Dropdowns): Categoría, Desenlace, Provincia -->
+            <div class="grid grid-cols-1 gap-2">
+              
+              <!-- Dropdown 1: Categoría -->
+              <div>
+                <label class="block text-[10px] uppercase font-mono font-medium text-slate-400 mb-0.5">
+                  Categoría
+                </label>
+                <select class="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-800 rounded text-slate-200 font-mono focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <option value="all">Todas las Categorías</option>
+                  <option value="homicidios">Homicidios y Sicariato</option>
+                  <option value="crimen-organizado">Crimen Organizado</option>
+                  <option value="robo-armado">Robo y Asalto a Mano Armada</option>
+                  <option value="narcoticos">Microtráfico y Sustancias</option>
+                  <option value="armas">Tráfico Ilícito de Armas</option>
+                  <option value="profugos">Prófugos de la Justicia</option>
+                </select>
+              </div>
+
+              <!-- Dropdown 2: Desenlace -->
+              <div>
+                <label class="block text-[10px] uppercase font-mono font-medium text-slate-400 mb-0.5">
+                  Desenlace
+                </label>
+                <select class="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-800 rounded text-slate-200 font-mono focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <option value="all">Todos los Desenlaces</option>
+                  <option value="arresto">Arrestado / En Custodia (Azul)</option>
+                  <option value="abatido">Abatido en Enfrentamiento (Rojo)</option>
+                  <option value="entregado">Entrega Voluntaria (Verde)</option>
+                  <option value="investigacion">En Proceso / Búsqueda Activa</option>
+                </select>
+              </div>
+
+              <!-- Dropdown 3: Provincia -->
+              <div>
+                <label class="block text-[10px] uppercase font-mono font-medium text-slate-400 mb-0.5">
+                  Provincia
+                </label>
+                <select class="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-800 rounded text-slate-200 font-mono focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <option value="all">Nivel Nacional (Todas)</option>
+                  <option value="distrito-nacional">Distrito Nacional</option>
+                  <option value="santo-domingo">Santo Domingo (Este/Oeste/Norte)</option>
+                  <option value="santiago">Santiago de los Caballeros</option>
+                  <option value="san-cristobal">San Cristóbal</option>
+                  <option value="la-vega">La Vega</option>
+                  <option value="puerto-plata">Puerto Plata</option>
+                  <option value="la-altagracia">La Altagracia (Higüey/Bávaro)</option>
+                </select>
+              </div>
+
+            </div>
+
+            <!-- Resumen de filtro activo -->
+            <div class="pt-1 flex items-center justify-between text-[10px] font-mono text-slate-400">
+              <span>Filtro: <strong class="text-slate-300">568 resultados</strong></span>
+              <button class="text-blue-400 hover:text-blue-300 underline cursor-pointer">Restablecer</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- LISTA DESPLAZABLE (SCROLLABLE) DE TARJETAS PEQUEÑAS (REPORTS POLICIALES) -->
+        <div class="flex-1 overflow-y-auto p-3 space-y-2.5 max-h-[520px]">
+          
+          <!-- Card Policial 1: Desenlace Abatido (Rojo) -->
+          <article class="bg-slate-950 border border-slate-800 rounded p-3 hover:border-red-500/50 transition cursor-pointer group">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="px-1.5 py-0.5 text-[9px] font-mono font-semibold uppercase rounded bg-red-950/80 text-red-400 border border-red-800/60">
+                CRIMEN ORGANIZADO
+              </span>
+              <span class="text-[10px] font-mono text-slate-500">18:24 • HACE 18 MIN</span>
+            </div>
+            <div class="text-[10px] font-mono text-slate-400 flex items-center space-x-1 mb-1">
+              <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Capotillo, D.N.</span>
+              <span class="text-slate-600">•</span>
+              <span class="text-red-400 font-semibold">ABATIDO</span>
+            </div>
+            <h3 class="text-xs font-semibold text-slate-100 group-hover:text-red-300 transition leading-snug">
+              Cae abatido alias 'El Cuervo' tras enfrentar patrulla táctica de DICRIM
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+              El sospechoso, buscado por 4 homicidios por encargo, abrió fuego con pistola calibre 9mm sin numeración visible. Ocupadas dos armas de fuego.
+            </p>
+            <div class="mt-2 pt-2 border-t border-slate-900 flex items-center justify-between text-[10px] font-mono text-slate-500">
+              <span>EXP: #DICRIM-2025-0981</span>
+              <span class="text-red-400 font-medium">VER DETALLES →</span>
+            </div>
+          </article>
+
+          <!-- Card Policial 2: Desenlace Arrestado (Azul) -->
+          <article class="bg-slate-950 border border-slate-800 rounded p-3 hover:border-blue-500/50 transition cursor-pointer group">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="px-1.5 py-0.5 text-[9px] font-mono font-semibold uppercase rounded bg-blue-950/80 text-blue-400 border border-blue-800/60">
+                ROBO AGRAVADO
+              </span>
+              <span class="text-[10px] font-mono text-slate-500">17:50 • HACE 52 MIN</span>
+            </div>
+            <div class="text-[10px] font-mono text-slate-400 flex items-center space-x-1 mb-1">
+              <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Villa Mella, Sto Dgo Norte</span>
+              <span class="text-slate-600">•</span>
+              <span class="text-blue-400 font-semibold">ARRESTADO</span>
+            </div>
+            <h3 class="text-xs font-semibold text-slate-100 group-hover:text-blue-300 transition leading-snug">
+              Capturan a 3 miembros de banda dedicada al asalto de sucursales bancarias
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+              Allanamiento coordinado con el Ministerio Público permitió la detención y el decomiso de RD$ 840,000 en efectivo y dos vehículos con reporte de robo.
+            </p>
+            <div class="mt-2 pt-2 border-t border-slate-900 flex items-center justify-between text-[10px] font-mono text-slate-500">
+              <span>EXP: #DICRIM-2025-0979</span>
+              <span class="text-blue-400 font-medium">VER DETALLES →</span>
+            </div>
+          </article>
+
+          <!-- Card Policial 3: Desenlace Entregado (Verde) -->
+          <article class="bg-slate-950 border border-slate-800 rounded p-3 hover:border-emerald-500/50 transition cursor-pointer group">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="px-1.5 py-0.5 text-[9px] font-mono font-semibold uppercase rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800/60">
+                PRÓFUGO REQUERIDO
+              </span>
+              <span class="text-[10px] font-mono text-slate-500">16:15 • HACE 2 H</span>
+            </div>
+            <div class="text-[10px] font-mono text-slate-400 flex items-center space-x-1 mb-1">
+              <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Los Alcarrizos, Sto Dgo Oeste</span>
+              <span class="text-emerald-400 font-semibold">ENTREGADO</span>
+            </div>
+            <h3 class="text-xs font-semibold text-slate-100 group-hover:text-emerald-300 transition leading-snug">
+              Se entrega voluntariamente señalado por atraco tras llamado policial
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+              Acompañado por miembros de la comisión de derechos humanos y sacerdotes locales, alias 'El Menor' se presentó en el destacamento de Los Americanos.
+            </p>
+            <div class="mt-2 pt-2 border-t border-slate-900 flex items-center justify-between text-[10px] font-mono text-slate-500">
+              <span>EXP: #DICRIM-2025-0974</span>
+              <span class="text-emerald-400 font-medium">VER DETALLES →</span>
+            </div>
+          </article>
+
+          <!-- Card Policial 4: Desenlace Arrestado (Azul) -->
+          <article class="bg-slate-950 border border-slate-800 rounded p-3 hover:border-blue-500/50 transition cursor-pointer group">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="px-1.5 py-0.5 text-[9px] font-mono font-semibold uppercase rounded bg-blue-950/80 text-blue-400 border border-blue-800/60">
+                SUSTANCIAS CONTROLADAS
+              </span>
+              <span class="text-[10px] font-mono text-slate-500">15:02 • HACE 3 H</span>
+            </div>
+            <div class="text-[10px] font-mono text-slate-400 flex items-center space-x-1 mb-1">
+              <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Gurabo, Santiago</span>
+              <span class="text-blue-400 font-semibold">ARRESTADO</span>
+            </div>
+            <h3 class="text-xs font-semibold text-slate-100 group-hover:text-blue-300 transition leading-snug">
+              Desmantelan centro de acopio y empaque de narcóticos; 2 detenidos
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+              Ocupadas 42 libras de polvo blanco presunta cocaína, 3 balanzas digitales de precisión y equipos de radiocomunicación táctica punto a punto.
+            </p>
+            <div class="mt-2 pt-2 border-t border-slate-900 flex items-center justify-between text-[10px] font-mono text-slate-500">
+              <span>EXP: #DICRIM-2025-0968</span>
+              <span class="text-blue-400 font-medium">VER DETALLES →</span>
+            </div>
+          </article>
+
+          <!-- Card Policial 5: Incidente Filtrado (Morado) -->
+          <article class="bg-slate-950 border border-slate-800 rounded p-3 hover:border-purple-500/50 transition cursor-pointer group">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="px-1.5 py-0.5 text-[9px] font-mono font-semibold uppercase rounded bg-purple-950/80 text-purple-400 border border-purple-800/60">
+                INTELIGENCIA / RADAR
+              </span>
+              <span class="text-[10px] font-mono text-slate-500">14:10 • HACE 4 H</span>
+            </div>
+            <div class="text-[10px] font-mono text-slate-400 flex items-center space-x-1 mb-1">
+              <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>San Cristóbal Centro</span>
+              <span class="text-purple-400 font-semibold">FILTRADO ACTIVO</span>
+            </div>
+            <h3 class="text-xs font-semibold text-slate-100 group-hover:text-purple-300 transition leading-snug">
+              Alerta de interceptación vehicular sobre corredor sur por seguimiento GPS
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+              Vehículo sospechoso vinculado a atraco en Baní ingresó al perímetro urbano. Tres unidades de respuesta rápida desplegadas para cierre perimetral.
+            </p>
+            <div class="mt-2 pt-2 border-t border-slate-900 flex items-center justify-between text-[10px] font-mono text-slate-500">
+              <span>EXP: #DICRIM-2025-0961</span>
+              <span class="text-purple-400 font-medium">VER DETALLES →</span>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- Footer del panel lateral -->
+        <div class="p-2.5 border-t border-slate-800 bg-slate-900/90 text-[10px] font-mono text-slate-400 flex items-center justify-between">
+          <div class="flex items-center space-x-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span>SINCRONIZACIÓN AUTOMÁTICA</span>
+          </div>
+          <span class="text-slate-500">DICRIM-PN v4.8</span>
+        </div>
+
+      </aside>
+
+    </div>
+
+  </main>
+
+</body>
+</html>

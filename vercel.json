@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "*/5 * * * *"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/cron",
+      "destination": "/api/cron"
+    },
+    {
+      "source": "/api/incidents",
+      "destination": "/api/incidents"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "functions": {
+    "api/**/*.py": {
+      "maxDuration": 60
+    }
+  }
+}
