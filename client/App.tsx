@@ -93,15 +93,10 @@ export default function App() {
           <div>
             <div className="flex items-center space-x-2.5">
               <h1 className="text-base font-bold tracking-wider text-slate-50 uppercase font-mono">
-                Centro de Operaciones y Monitoreo Policial
+                Un Tiguere Menos
               </h1>
-              <span className="px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase rounded bg-blue-950 text-blue-400 border border-blue-800/60 font-mono">
-                C4I TÁCTICO
-              </span>
+
             </div>
-            <p className="text-xs text-slate-400 font-mono tracking-tight">
-              DIRECCIÓN CENTRAL DE INVESTIGACIÓN (DICRIM) • POLICÍA NACIONAL
-            </p>
           </div>
         </div>
 
@@ -193,7 +188,7 @@ export default function App() {
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-xs uppercase tracking-wider font-semibold text-purple-400 font-mono">
-                  Incidentes Filtrados
+                  Casos analizados
                 </span>
                 <div className="mt-2 flex items-baseline space-x-2">
                   <span className="text-3xl font-bold font-mono tracking-tight text-white">
@@ -219,7 +214,7 @@ export default function App() {
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-1.5 text-xs font-mono text-slate-300">
                   <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                  <span className="font-semibold uppercase tracking-wider">VISOR CARTOGRÁFICO GEOESPACIAL</span>
+                  <span className="font-semibold uppercase tracking-wider">Mapa</span>
                 </div>
               </div>
             </div>
