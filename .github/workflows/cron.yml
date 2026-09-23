@@ -1,0 +1,12 @@
+name: Ping Vercel Cron
+on:
+  schedule:
+    - cron: '*/10 * * * *' # Cada 10 minutos (GitHub Actions limite real practico)
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Cron Endpoint
+        run: curl -s https://untigueremenos.vercel.app/api/cron
